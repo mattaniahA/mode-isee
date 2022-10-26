@@ -39,9 +39,17 @@ function setup() {
 
   midiCheckbox = createCheckbox('use midi controller', true);
   // midiCheckbox.changed(() => {useMidiController = midiCheckbox.checked();});
+  radiusDiv = createDiv('radius');
   radiusSlider = createSlider(stepMin, stepMax, stepMin);
+  radiusSlider.parent(radiusDiv);
+
+  fgDiv = createDiv('primary color');
   fgSlider = createSlider(0, 2, 0, 1);
+  fgSlider.parent(fgDiv);
+
+  bgDiv = createDiv('secondary color');
   bgSlider = createSlider(0, 3, 0, 1);
+  bgSlider.parent(bgDiv);
 }
 
 function draw() {
