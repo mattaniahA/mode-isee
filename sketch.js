@@ -4,36 +4,65 @@
  */
 
 let cam;
-let stepSize;
 let h, w;
 
-let fgIndex = 0;
-let bgIndex = 0;
-let colors = [
-  // fg, [bg, bg, bg]
-  ["fg0", ['0bg0', '0bg1', '0bg2', '0bg3']],
-  ["fg1", ['1bg0', '1bg1', '1bg2', '1bg3']],
-  ["fg2", ['2bg0', '2bg1', '2bg2', '2bg3']]
-];
+let stepSize;
+let stepMin = 12;
+let stepMax = 65;
+
+let baseColorIndex = 0;
+let secColorIndex = 0;
+
+let blackPalette = {
+  primary: "#000", 
+  secondary: ['#52C636', '#50B0DB', '#F61C54', '#8673BD']
+};
+let pinkPalette = {
+  primary: "#FF69B4", 
+  secondary: ['#120E98', '#3D1202', '#033B24', '#400D8C']
+};
+let greenPalette = {
+  primary: "#00FF7F", 
+  secondary: ['#162F19', '#190882', '#755D09', '#A52A6E']
+};
+
+let midiCheckbox;
+let radiusSlider, fgSlider, bgSlider;
 
 function setup() {
-   createCanvas(windowWidth, windowHeight);
-   cam = createCapture(VIDEO);
-   cam.size(windowWidth, windowHeight); 
-   cam.hide(); 
-   background(255);
-   noStroke();
+  createCanvas(windowWidth, windowHeight);
+  cam = createCapture(VIDEO);
+  cam.size(windowWidth, windowHeight); 
+  cam.hide(); 
+  background(255);
+  noStroke();
+
+  midiCheckbox = createCheckbox('use midi controller', true);
+  // midiCheckbox.changed(() => {useMidiController = midiCheckbox.checked();});
+  radiusSlider = createSlider(stepMin, stepMax, stepMin);
+  fgSlider = createSlider(0, 2, 0, 1);
+  bgSlider = createSlider(0, 3, 0, 1);
 }
 
-
 function draw() {
-  foregroundMidi(midiVal(KNOB1));
-  backgroundMidi(midiVal(KNOB2));
-  radiusdMidi(midiVal(KNOB3));
+  switchControls(); 
   cam.loadPixels();
 
-  background('pink');
-  fill('green');
+  let curColorPalette, bg, fg;
+  if(baseColorIndex === 0) {
+    curColorPalette = blackPalette;
+    background(curColorPalette.primary);
+    fill(curColorPalette.secondary[secColorIndex]);
+  } else if(baseColorIndex === 1) {
+    curColorPalette = pinkPalette;
+    background(curColorPalette.secondary[secColorIndex]);
+    fill(curColorPalette.primary);
+  } else {
+    curColorPalette = greenPalette;
+    background(curColorPalette.secondary[secColorIndex]);
+    fill(curColorPalette.primary);
+  }
+
 
   for (let y = 0; y < height; y += stepSize) {
     for (let x = 0; x < width; x += stepSize) {
@@ -46,18 +75,38 @@ function draw() {
   }
 }
 
-function foregroundMidi(sliderVal){
-  fgIndex = round(map(sliderVal, 0, 127, 0, colors.length-1))
-  // console.log(colors[fgIndex][0]);
+function primaryColorMidi(sliderVal){
+  if (midiCheckbox.checked()){
+    baseColorIndex = round(map(sliderVal, 0, 127, 0, 2))
+  } else {
+    baseColorIndex = sliderVal;
+  }
 }
 
-function backgroundMidi(sliderVal){
-  bgIndex = round(map(sliderVal, 0, 127, 0, colors[fgIndex][1].length-1))
-  // console.log(colors[fgIndex][1][bgIndex]);
+function secondaryColorMidi(sliderVal){
+  if (midiCheckbox.checked()){
+    secColorIndex = round(map(sliderVal, 0, 127, 0, 3))
+  } else {
+    secColorIndex = sliderVal;
+  }
 }
 
 function radiusdMidi(sliderVal){
-  stepSize = round(map(sliderVal, 0, 127, 25, 80));
-  console.log(stepSize);
-  // console.log(colors[fgIndex][1][bgIndex]);
+  if (midiCheckbox.checked()){
+    stepSize = round(map(sliderVal, 0, 127, stepMin, stepMax));
+  } else {
+    stepSize = sliderVal;
+  }
+}
+
+function switchControls(){
+  if (midiCheckbox.checked()){
+    radiusdMidi(midiVal(KNOB1));
+    primaryColorMidi(midiVal(KNOB2));
+    secondaryColorMidi(midiVal(KNOB3));
+  } else {
+    radiusdMidi(radiusSlider.value());
+    primaryColorMidi(fgSlider.value());
+    secondaryColorMidi(bgSlider.value());
+  }
 }
